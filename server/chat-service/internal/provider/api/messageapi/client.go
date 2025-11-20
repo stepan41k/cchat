@@ -1,4 +1,4 @@
-package userapi
+package messageapi
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/sergey-frey/cchat/server/auth-service/internal/domain/models"
+	"github.com/sergey-frey/cchat/server/chat-service/internal/domain/models"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 	ErrUserNotFound = fmt.Errorf("user not found")
 )
 
-type NormalizedUserResponse struct {
+type NormalizedMessageResponse struct {
 	Status int                `json:"status"`
 	Data   models.NormalizedUser `json:"data"`
 }
@@ -78,7 +78,7 @@ func (c *Client) GetUser(ctx context.Context, email string) (*models.NormalizedU
 
 	defer resp.Body.Close()
 
-	var user NormalizedUserResponse
+	var user NormalizedMessageResponse
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -122,7 +122,7 @@ func (c *Client) CreateUser(ctx context.Context, email string) (*models.Normaliz
 
 	defer resp.Body.Close()
 
-	var newUser NormalizedUserResponse
+	var newUser NormalizedMessageResponse
 	if err := json.NewDecoder(resp.Body).Decode(&newUser); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

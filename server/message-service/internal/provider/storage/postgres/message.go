@@ -6,18 +6,17 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/sergey-frey/cchat/server/chat-service/internal/domain/models"
-	"github.com/sergey-frey/cchat/server/chat-service/internal/provider/storage"
+	"github.com/sergey-frey/cchat/message-service/internal/domain/models"
+	"github.com/sergey-frey/cchat/message-service/internal/provider/storage"
 )
 
-func (s *Storage) NewChat(ctx context.Context, chatName string, users []uuid.UUID) (chatID uuid.UUID, err error) {
+func (s *Storage) NewChat(ctx context.Context, users []int64) (chatID int64, err error) {
 	const op = "storage.chat.NewChat"
 
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("%s: %w", op, err)
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
 	defer func() {
@@ -39,7 +38,7 @@ func (s *Storage) NewChat(ctx context.Context, chatName string, users []uuid.UUI
 
 	err = row.Scan(&chatID)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("%s: %w", op, storage.ErrFailedToCreateChat)
+		return 0, fmt.Errorf("%s: %w", op, storage.ErrFailedToCreateChat)
 	}
 
 	rows := make([][]interface{}, len(users))
@@ -55,13 +54,13 @@ func (s *Storage) NewChat(ctx context.Context, chatName string, users []uuid.UUI
 	)
 
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("%s: %w", op, storage.ErrFailedToAddUsersInChat)
+		return 0, fmt.Errorf("%s: %w", op, storage.ErrFailedToAddUsersInChat)
 	}
 
 	return chatID, nil
 }
 
-func (s *Storage) ListChats(ctx context.Context, currUser uuid.UUID, cursor uuid.UUID, limit int) ([]models.Chat, *models.Cursor, error) {
+func (s *Storage) ListChats(ctx context.Context, currUser int64, username string, cursor int64, limit int) ([]models.Message, *models.Cursor, error) {
 	const op = "storage.chat.Chat"
 
 	tx, err := s.pool.Begin(ctx)
@@ -189,33 +188,11 @@ func (s *Storage) ListChats(ctx context.Context, currUser uuid.UUID, cursor uuid
 		chats = append(chats, chat)
 	}
 
-	rcursor := &models.Cursor{}
+	// rcursor := &models.Cursor{}
 
 	if len(chats) == 0 {
 		return nil, nil, fmt.Errorf("%s: %w", op, storage.ErrUsersNotFound)
 	}
 
-	if len(chats) < 2 {
-		rcursor = &models.Cursor{
-			PrevCursor: chats[len(chats)-1].ID,
-		}
-		return chats, rcursor, nil
-	}
-
-	if len(chats) >= 2 {
-		if len(chats) <= limit {
-			rcursor = &models.Cursor{
-				PrevCursor: chats[len(chats)-1].ID,
-			}
-			return chats, rcursor, nil
-		}
-		if len(chats) > limit {
-			rcursor = &models.Cursor{
-				PrevCursor: chats[len(chats)-2].ID,
-				NextCursor: chats[len(chats)-1].ID,
-			}
-		}
-	}
-
-	return chats[:len(chats)-1], rcursor, nil
+	return nil, nil, nil
 }
